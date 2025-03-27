@@ -79,21 +79,20 @@
             loading.style.display = 'block';
             
             try {
-                const mangaRes = await fetch('https://api.mangadex.org/manga/random');
-                const mangaData = await mangaRes.json();
-                const manga = mangaData.data;
+                const mangaListRes = await fetch('https://api.mangadex.org/manga?limit=100&includes[]=cover_art');
+                const mangaListData = await mangaListRes.json();
+                const mangaList = mangaListData.data;
+                const randomManga = mangaList[Math.floor(Math.random() * mangaList.length)];
                 
-                const title = manga.attributes.title.en || Object.values(manga.attributes.title)[0];
-                let description = manga.attributes.description.en || "Açıklama bulunamadı.";
+                const title = randomManga.attributes.title.en || Object.values(randomManga.attributes.title)[0] || "Bilinmeyen Başlık";
+                let description = randomManga.attributes.description.en || "Açıklama bulunamadı.";
                 description = description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
                 
-                const coverArt = manga.relationships.find(r => r.type === 'cover_art');
+                const coverArt = randomManga.relationships.find(r => r.type === 'cover_art');
                 let coverUrl = 'https://via.placeholder.com/200x300?text=Kapak+Yok';
                 
                 if (coverArt) {
-                    const coverRes = await fetch(`https://api.mangadex.org/cover/${coverArt.id}`);
-                    const coverData = await coverRes.json();
-                    coverUrl = `https://uploads.mangadex.org/covers/${manga.id}/${coverData.data.attributes.fileName}`;
+                    coverUrl = `https://uploads.mangadex.org/covers/${randomManga.id}/${coverArt.attributes.fileName}`;
                 }
                 
                 container.innerHTML = `
@@ -101,7 +100,7 @@
                         <h2>${title}</h2>
                         <img src="${coverUrl}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=Kapak+Yok'">
                         <p>${description}</p>
-                        <a href="https://mangadex.org/title/${manga.id}" target="_blank">Mangadex'te oku</a>
+                        <a href="https://mangadex.org/title/${randomManga.id}" target="_blank">Mangadex'te oku</a>
                     </div>
                 `;
                 
