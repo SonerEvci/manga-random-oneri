@@ -59,6 +59,18 @@
             color: red;
             text-align: center;
         }
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .tag {
+            background: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -79,32 +91,54 @@
             loading.style.display = 'block';
             
             try {
-                const mangaListRes = await fetch('https://api.mangadex.org/manga?limit=100&includes[]=cover_art');
-                const mangaListData = await mangaListRes.json();
-                const mangaList = mangaListData.data;
+                // Mangadex random manga endpoint'i
+                const randomRes = await fetch('https://api.mangadex.org/manga/random?includes[]=cover_art&includes[]=author&includes[]=artist&includes[]=tag');
+                const randomManga = await randomRes.json();
                 
-                if (!mangaList || mangaList.length === 0) {
+                if (!randomManga.data || randomManga.result === 'error') {
                     throw new Error("Manga bulunamadı.");
                 }
                 
-                const randomManga = mangaList[Math.floor(Math.random() * mangaList.length)];
-                const title = randomManga.attributes.title.en || Object.values(randomManga.attributes.title)[0] || "Bilinmeyen Başlık";
-                let description = randomManga.attributes.description.en || "Açıklama bulunamadı.";
-                description = description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+                const mangaData = randomManga.data;
+                const title = mangaData.attributes.title.en || 
+                              Object.values(mangaData.attributes.title)[0] || 
+                              "Bilinmeyen Başlık";
                 
-                const coverArt = randomManga.relationships.find(r => r.type === 'cover_art');
+                // Açıklama temizleme ve kısaltma
+                let description = mangaData.attributes.description.en || 
+                                 Object.values(mangaData.attributes.description)[0] || 
+                                 "Açıklama bulunamadı.";
+                description = description.replace(/<[^>]*>/g, '')
+                                          .replace(/\[[^\]]*\]/g, '')
+                                          .substring(0, 300) + '...';
+                
+                // Kapak resmi URL'si
+                const coverArt = mangaData.relationships.find(r => r.type === 'cover_art');
                 let coverUrl = 'https://via.placeholder.com/200x300?text=Kapak+Yok';
                 
                 if (coverArt) {
-                    coverUrl = `https://uploads.mangadex.org/covers/${randomManga.id}/${coverArt.attributes.fileName}`;
+                    coverUrl = `https://uploads.mangadex.org/covers/${mangaData.id}/${coverArt.attributes.fileName}.256.jpg`;
                 }
+                
+                // Yazar bilgisi
+                const author = mangaData.relationships.find(r => r.type === 'author') || 
+                                mangaData.relationships.find(r => r.type === 'artist');
+                const authorName = author?.attributes?.name || "Bilinmeyen Yazar";
+                
+                // Etiketler (tags)
+                const tags = mangaData.attributes.tags
+                    .filter(tag => tag.attributes.group === 'genre')
+                    .map(tag => `<span class="tag">${tag.attributes.name.en}</span>`)
+                    .join('');
                 
                 container.innerHTML = `
                     <div class="manga-card">
                         <h2>${title}</h2>
+                        <p><strong>Yazar:</strong> ${authorName}</p>
                         <img src="${coverUrl}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=Kapak+Yok'">
+                        <div class="tags">${tags}</div>
                         <p>${description}</p>
-                        <a href="https://mangadex.org/title/${randomManga.id}" target="_blank">Mangadex'te oku</a>
+                        <a href="https://mangadex.org/title/${mangaData.id}" target="_blank">Mangadex'te oku</a>
                     </div>
                 `;
                 
