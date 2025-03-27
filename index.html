@@ -3,58 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Shounen Manga Recommender</title>
+    <title>Random Manga Generator</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4; }
-        h1 { color: #333; }
-        #manga-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        #manga-title { font-size: 24px; margin: 20px 0; color: #444; }
-        #manga-cover { max-width: 100%; display: block; margin: 20px auto; border-radius: 10px; }
-        #manga-description { font-size: 16px; color: #666; margin-bottom: 15px; }
-        #manga-link { display: block; margin-top: 10px; font-size: 18px; color: #007bff; text-decoration: none; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; font-size: 16px; border-radius: 5px; }
-        button:hover { background: #0056b3; }
+         body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #manga-container {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            text-align: left;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+        a {
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <h1>Random Shounen Manga Recommender</h1>
-    <div id="manga-container">
-        <button id="getManga">Get Random Shounen Manga</button>
-        <h2 id="manga-title"></h2>
-        <img id="manga-cover" src="" alt="Manga Cover" style="display:none;">
-        <p id="manga-description"></p>
-        <a id="manga-link" href="#" target="_blank" style="display:none;">Read More</a>
-    </div>
-    
+    <h1>Random Manga Generator</h1>
+    <button onclick="fetchRandomManga()">Get Random Manga</button>
+    <div id="manga-container"></div>
+
     <script>
-        async function getRandomShounenManga() {
+        async function fetchRandomManga() {
             try {
-                const response = await fetch('https://api.jikan.moe/v4/manga?genres=27&order_by=popularity&sort=desc&limit=50');
+                const randomPage = Math.floor(Math.random() * 7) + 1; // Rastgele 1-7 arası sayfa seç
+                const response = await fetch(`https://api.jikan.moe/v4/top/manga?page=${randomPage}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
-                if (data && data.data.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * data.data.length);
-                    const manga = data.data[randomIndex];
-                    const title = manga.title || "Unknown Title";
-                    const description = manga.synopsis || "No description available.";
-                    const coverUrl = manga.images?.jpg?.large_image_url || '';
-                    const mangaLink = `https://myanimelist.net/manga/${manga.mal_id}`;
-                    
-                    document.getElementById('manga-title').textContent = title;
-                    document.getElementById('manga-description').textContent = description;
-                    document.getElementById('manga-link').href = mangaLink;
-                    document.getElementById('manga-link').style.display = 'block';
-                    
-                    const coverImg = document.getElementById('manga-cover');
-                    coverImg.src = coverUrl;
-                    coverImg.style.display = coverUrl ? 'block' : 'none';
+                if (!data || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
+                    throw new Error("No manga data available");
                 }
+                
+                const mangas = data.data;
+                const randomIndex = Math.floor(Math.random() * mangas.length);
+                const randomManga = mangas[randomIndex];
+
+                document.getElementById('manga-container').innerHTML = `
+                    <h2>${randomManga.title}</h2>
+                    <img src="${randomManga.images?.jpg?.image_url || ''}" alt="${randomManga.title}">
+                    <p><strong>Rank:</strong> ${randomManga.rank || 'N/A'}</p>
+                    <p><strong>Score:</strong> ${randomManga.score || 'N/A'}</p>
+                    <p>${randomManga.synopsis ? randomManga.synopsis.substring(0, 200) + '...' : 'No synopsis available.'}</p>
+                    <a href="${randomManga.url}" target="_blank">More Info</a>
+                `;
             } catch (error) {
                 console.error("Error fetching manga:", error);
+                document.getElementById('manga-container').innerHTML = `<p>Failed to fetch manga data. Error: ${error.message}</p>`;
             }
         }
-
-        document.getElementById('getManga').addEventListener('click', getRandomShounenManga);
     </script>
 </body>
 </html>
