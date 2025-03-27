@@ -35,9 +35,10 @@
                 if (data && data.data.length > 0) {
                     const manga = data.data[0];
                     const title = manga.attributes.title.en || "Unknown Title";
-                    const description = manga.attributes.description.en || "No description available.";
-                    const coverId = manga.relationships.find(rel => rel.type === 'cover_art')?.id;
-                    const coverUrl = coverId ? `https://uploads.mangadex.org/covers/${manga.id}/${coverId}.jpg.512.jpg` : '';
+                    const description = manga.attributes.description?.en || "No description available.";
+                    const coverRel = manga.relationships.find(rel => rel.type === 'cover_art');
+                    const coverId = coverRel ? coverRel.attributes.fileName : '';
+                    const coverUrl = coverId ? `https://uploads.mangadex.org/covers/${manga.id}/${coverId}` : '';
                     const mangaLink = `https://mangadex.org/title/${manga.id}`;
                     
                     document.getElementById('manga-title').textContent = title;
