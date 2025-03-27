@@ -251,29 +251,39 @@
             loading.style.display = 'block';
             
             try {
-                const mangaListRes = await fetch('https://api.mangadex.org/manga?limit=100&includes[]=cover_art&order[rating]=desc');
-                const mangaListData = await mangaListRes.json();
-                const mangaList = mangaListData.data;
+                // API'den rastgele manga listesi çek
+                const response = await fetch('https://api.mangadex.org/manga?limit=50&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&order[rating]=desc');
+                
+                if (!response.ok) {
+                    throw new Error(`API hatası: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const mangaList = data.data;
                 
                 if (!mangaList || mangaList.length === 0) {
                     throw new Error("Manga bulunamadı. Lütfen daha sonra tekrar deneyin.");
                 }
                 
-                // Popüler mangalardan rastgele seç (ilk 50'den)
-                const randomManga = mangaList[Math.floor(Math.random() * Math.min(50, mangaList.length))];
-                const title = randomManga.attributes.title.en || Object.values(randomManga.attributes.title)[0] || "Bilinmeyen Başlık";
+                // Rastgele bir manga seç
+                const randomManga = mangaList[Math.floor(Math.random() * mangaList.length)];
+                
+                // Başlık bilgisini al
+                const title = randomManga.attributes.title.en || 
+                              randomManga.attributes.title['ja-ro'] || 
+                              Object.values(randomManga.attributes.title)[0] || 
+                              "Bilinmeyen Başlık";
                 
                 // Açıklamayı temizle ve kısalt
-                let description = randomManga.attributes.description.en || 
-                                 randomManga.attributes.description.jp || 
-                                 randomManga.attributes.description['ja-ro'] || 
+                let description = randomManga.attributes.description?.en || 
+                                 randomManga.attributes.description?.['ja-ro'] || 
                                  "Bu manga hakkında bir açıklama bulunamadı.";
                 description = description.replace(/<[^>]*>/g, '')
                                        .replace(/\[[^\]]*\]/g, '')
                                        .substring(0, 250);
                 if (description.length >= 250) description += '...';
                 
-                // Kapak resmi URL'sini oluştur
+                // Kapak resmi bilgisini al
                 const coverArt = randomManga.relationships.find(r => r.type === 'cover_art');
                 let coverUrl = 'https://via.placeholder.com/600x300/2f3542/ffffff?text=Kapak+Bulunamadı';
                 
@@ -297,12 +307,12 @@
                 `;
                 
             } catch (error) {
+                console.error("Hata:", error);
                 container.innerHTML = `
                     <div class="error">
-                        <i class="fas fa-exclamation-triangle"></i> ${error.message}
+                        <i class="fas fa-exclamation-triangle"></i> ${error.message || "Bir hata oluştu. Lütfen daha sonra tekrar deneyin."}
                     </div>
                 `;
-                console.error("Manga yükleme hatası:", error);
             } finally {
                 loading.style.display = 'none';
                 btn.disabled = false;
