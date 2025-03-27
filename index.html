@@ -84,71 +84,72 @@
     </div>
     <script>
         document.getElementById('manga-btn').addEventListener('click', async function() {
-            const container = document.getElementById('manga-container');
-            const loading = document.getElementById('loading');
-            
-            container.innerHTML = '';
-            loading.style.display = 'block';
-            
-            try {
-                // Mangadex random manga endpoint'i
-                const randomRes = await fetch('https://api.mangadex.org/manga/random?includes[]=cover_art&includes[]=author&includes[]=artist&includes[]=tag');
-                const randomManga = await randomRes.json();
-                
-                if (!randomManga.data || randomManga.result === 'error') {
-                    throw new Error("Manga bulunamadı.");
-                }
-                
-                const mangaData = randomManga.data;
-                const title = mangaData.attributes.title.en || 
-                              Object.values(mangaData.attributes.title)[0] || 
-                              "Bilinmeyen Başlık";
-                
-                // Açıklama temizleme ve kısaltma
-                let description = mangaData.attributes.description.en || 
-                                 Object.values(mangaData.attributes.description)[0] || 
-                                 "Açıklama bulunamadı.";
-                description = description.replace(/<[^>]*>/g, '')
-                                          .replace(/\[[^\]]*\]/g, '')
-                                          .substring(0, 300) + '...';
-                
-                // Kapak resmi URL'si
-                const coverArt = mangaData.relationships.find(r => r.type === 'cover_art');
-                let coverUrl = 'https://via.placeholder.com/200x300?text=Kapak+Yok';
-                
-                if (coverArt) {
-                    coverUrl = `https://uploads.mangadex.org/covers/${mangaData.id}/${coverArt.attributes.fileName}.256.jpg`;
-                }
-                
-                // Yazar bilgisi
-                const author = mangaData.relationships.find(r => r.type === 'author') || 
-                                mangaData.relationships.find(r => r.type === 'artist');
-                const authorName = author?.attributes?.name || "Bilinmeyen Yazar";
-                
-                // Etiketler (tags)
-                const tags = mangaData.attributes.tags
-                    .filter(tag => tag.attributes.group === 'genre')
-                    .map(tag => `<span class="tag">${tag.attributes.name.en}</span>`)
-                    .join('');
-                
-                container.innerHTML = `
-                    <div class="manga-card">
-                        <h2>${title}</h2>
-                        <p><strong>Yazar:</strong> ${authorName}</p>
-                        <img src="${coverUrl}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=Kapak+Yok'">
-                        <div class="tags">${tags}</div>
-                        <p>${description}</p>
-                        <a href="https://mangadex.org/title/${mangaData.id}" target="_blank">Mangadex'te oku</a>
-                    </div>
-                `;
-                
-            } catch (error) {
-                container.innerHTML = `<p class="error">Hata oluştu: ${error.message}</p>`;
-                console.error(error);
-            } finally {
-                loading.style.display = 'none';
+    const container = document.getElementById('manga-container');
+    const loading = document.getElementById('loading');
+    
+    container.innerHTML = '';
+    loading.style.display = 'block';
+    
+    try {
+        // 1. Manga bilgilerini al
+        const mangaRes = await fetch('https://api.mangadex.org/manga/random', {
+            headers: {
+                'Content-Type': 'application/json'
             }
         });
+        
+        if (!mangaRes.ok) {
+            throw new Error(`HTTP error! status: ${mangaRes.status}`);
+        }
+        
+        const mangaData = await mangaRes.json();
+        const manga = mangaData.data;
+        
+        // 2. Başlık ve açıklama
+        const title = manga.attributes.title.en || Object.values(manga.attributes.title)[0];
+        let description = manga.attributes.description.en || "Açıklama bulunamadı.";
+        description = description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+        
+        // 3. Kapak resmi için
+        let coverUrl = 'https://via.placeholder.com/200x300?text=Kapak+Yok';
+        
+        const coverArt = manga.relationships.find(r => r.type === 'cover_art');
+        if (coverArt) {
+            try {
+                const coverRes = await fetch(`https://api.mangadex.org/cover/${coverArt.id}`);
+                if (coverRes.ok) {
+                    const coverData = await coverRes.json();
+                    coverUrl = `https://uploads.mangadex.org/covers/${manga.id}/${coverData.data.attributes.fileName}`;
+                }
+            } catch (coverError) {
+                console.warn("Kapak resmi yüklenemedi:", coverError);
+            }
+        }
+        
+        // 4. HTML oluştur
+        container.innerHTML = `
+            <div class="manga-card">
+                <h2>${title}</h2>
+                <img src="${coverUrl}" alt="${title}" 
+                     onerror="this.src='https://via.placeholder.com/200x300?text=Kapak+Yok'">
+                <p>${description}</p>
+                <a href="https://mangadex.org/title/${manga.id}" target="_blank">Mangadex'te oku</a>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error("API Hatası:", error);
+        container.innerHTML = `
+            <div class="error">
+                <p>Manga bilgileri alınamadı</p>
+                <p>Lütfen daha sonra tekrar deneyin</p>
+                <small>Hata detayı: ${error.message}</small>
+            </div>
+        `;
+    } finally {
+        loading.style.display = 'none';
+    }
+});
     </script>
 </body>
 </html>
