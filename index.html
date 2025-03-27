@@ -3,153 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manga Önerici</title>
+    <title>Manga Önerici | Rastgele Manga Keşfet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+        :root {
+            --primary: #ff4757;
+            --primary-hover: #ff6b81;
+            --dark: #2f3542;
+            --light: #f1f2f6;
+            --gray: #a4b0be;
+        }
+        
+        * {
             margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            background-color: #f8f9fa;
             color: #333;
-            text-align: center;
         }
-        button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: #ff4757;
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: var(--dark);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 28px;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+            margin: 20px auto;
         }
-        button:hover {
-            background: #ff6b81;
+        
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
         }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
         #loading {
             text-align: center;
             display: none;
-            margin: 20px 0;
+            margin: 30px 0;
         }
-        .manga-card {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
         }
-        .manga-card img {
-            max-width: 200px;
-            display: block;
-            margin: 10px auto;
-            border-radius: 4px;
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .error {
-            color: red;
+        
+        #manga-container {
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
         }
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin: 10px 0;
+        
+        .initial-message {
+            color: var(--gray);
+            font-size: 1.2rem;
         }
-        .tag {
-            background: #f0f0f0;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 12px;
+        
+        .manga-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .manga-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .manga-cover {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            object-position: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .manga-content {
+            padding: 25px;
+        }
+        
+        .manga-title {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .manga-description {
+            color: #555;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .read-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--dark);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .read-btn:hover {
+            background: #1e272e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .error {
+            color: #ff4757;
+            font-weight: 600;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .manga-cover {
+                height: 250px;
+            }
+            
+            .manga-title {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Manga Önerici</h1>
-        <button id="manga-btn">Rastgele Manga Getir</button>
-        <div id="loading">Yükleniyor...</div>
+        <header>
+            <h1>Manga Keşif Aracı</h1>
+            <p class="subtitle">Japon çizgi roman dünyasında yeni seriler keşfedin</p>
+        </header>
+        
+        <button id="manga-btn" class="btn">
+            <i class="fas fa-random"></i> Rastgele Manga Öner
+        </button>
+        
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Manga aranıyor...</p>
+        </div>
+        
         <div id="manga-container">
-            <p>Butona basarak rastgele bir manga keşfedin!</p>
+            <p class="initial-message">
+                <i class="fas fa-search"></i> Yukarıdaki butona basarak rastgele bir manga önerisi alabilirsiniz!
+            </p>
         </div>
     </div>
+    
+    <footer>
+        <p>© 2023 Manga Önerici | Mangadex API kullanılmıştır</p>
+    </footer>
+    
     <script>
         document.getElementById('manga-btn').addEventListener('click', async function() {
-    const container = document.getElementById('manga-container');
-    const loading = document.getElementById('loading');
-    
-    container.innerHTML = '';
-    loading.style.display = 'block';
-    
-    try {
-        // 1. Manga bilgilerini al
-        const mangaRes = await fetch('https://api.mangadex.org/manga/random', {
-            headers: {
-                'Content-Type': 'application/json'
+            const container = document.getElementById('manga-container');
+            const loading = document.getElementById('loading');
+            const btn = this;
+            
+            // Butonu devre dışı bırak ve yükleme durumunu ayarla
+            btn.disabled = true;
+            container.innerHTML = '';
+            loading.style.display = 'block';
+            
+            try {
+                const mangaListRes = await fetch('https://api.mangadex.org/manga?limit=100&includes[]=cover_art&order[rating]=desc');
+                const mangaListData = await mangaListRes.json();
+                const mangaList = mangaListData.data;
+                
+                if (!mangaList || mangaList.length === 0) {
+                    throw new Error("Manga bulunamadı. Lütfen daha sonra tekrar deneyin.");
+                }
+                
+                // Popüler mangalardan rastgele seç (ilk 50'den)
+                const randomManga = mangaList[Math.floor(Math.random() * Math.min(50, mangaList.length))];
+                const title = randomManga.attributes.title.en || Object.values(randomManga.attributes.title)[0] || "Bilinmeyen Başlık";
+                
+                // Açıklamayı temizle ve kısalt
+                let description = randomManga.attributes.description.en || 
+                                 randomManga.attributes.description.jp || 
+                                 randomManga.attributes.description['ja-ro'] || 
+                                 "Bu manga hakkında bir açıklama bulunamadı.";
+                description = description.replace(/<[^>]*>/g, '')
+                                       .replace(/\[[^\]]*\]/g, '')
+                                       .substring(0, 250);
+                if (description.length >= 250) description += '...';
+                
+                // Kapak resmi URL'sini oluştur
+                const coverArt = randomManga.relationships.find(r => r.type === 'cover_art');
+                let coverUrl = 'https://via.placeholder.com/600x300/2f3542/ffffff?text=Kapak+Bulunamadı';
+                
+                if (coverArt) {
+                    coverUrl = `https://uploads.mangadex.org/covers/${randomManga.id}/${coverArt.attributes.fileName}.256.jpg`;
+                }
+                
+                // Manga kartını oluştur
+                container.innerHTML = `
+                    <div class="manga-card">
+                        <img src="${coverUrl}" class="manga-cover" alt="${title}" 
+                             onerror="this.src='https://via.placeholder.com/600x300/2f3542/ffffff?text=Kapak+Bulunamadı'">
+                        <div class="manga-content">
+                            <h2 class="manga-title">${title}</h2>
+                            <p class="manga-description">${description}</p>
+                            <a href="https://mangadex.org/title/${randomManga.id}" class="read-btn" target="_blank">
+                                <i class="fas fa-book-open"></i> Mangayı Oku
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i> ${error.message}
+                    </div>
+                `;
+                console.error("Manga yükleme hatası:", error);
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
             }
         });
-        
-        if (!mangaRes.ok) {
-            throw new Error(`HTTP error! status: ${mangaRes.status}`);
-        }
-        
-        const mangaData = await mangaRes.json();
-        const manga = mangaData.data;
-        
-        // 2. Başlık ve açıklama
-        const title = manga.attributes.title.en || Object.values(manga.attributes.title)[0];
-        let description = manga.attributes.description.en || "Açıklama bulunamadı.";
-        description = description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
-        
-        // 3. Kapak resmi için
-        let coverUrl = 'https://via.placeholder.com/200x300?text=Kapak+Yok';
-        
-        const coverArt = manga.relationships.find(r => r.type === 'cover_art');
-        if (coverArt) {
-            try {
-                const coverRes = await fetch(`https://api.mangadex.org/cover/${coverArt.id}`);
-                if (coverRes.ok) {
-                    const coverData = await coverRes.json();
-                    coverUrl = `https://uploads.mangadex.org/covers/${manga.id}/${coverData.data.attributes.fileName}`;
-                }
-            } catch (coverError) {
-                console.warn("Kapak resmi yüklenemedi:", coverError);
-            }
-        }
-        
-        // 4. HTML oluştur
-        container.innerHTML = `
-            <div class="manga-card">
-                <h2>${title}</h2>
-                <img src="${coverUrl}" alt="${title}" 
-                     onerror="this.src='https://via.placeholder.com/200x300?text=Kapak+Yok'">
-                <p>${description}</p>
-                <a href="https://mangadex.org/title/${manga.id}" target="_blank">Mangadex'te oku</a>
-            </div>
-        `;
-        
-    } catch (error) {
-        console.error("API Hatası:", error);
-        container.innerHTML = `
-            <div class="error">
-                <p>Manga bilgileri alınamadı</p>
-                <p>Lütfen daha sonra tekrar deneyin</p>
-                <small>Hata detayı: ${error.message}</small>
-            </div>
-        `;
-    } finally {
-        loading.style.display = 'none';
-    }
-});
     </script>
 </body>
 </html>
