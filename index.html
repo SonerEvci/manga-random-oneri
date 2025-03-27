@@ -82,8 +82,12 @@
                 const mangaListRes = await fetch('https://api.mangadex.org/manga?limit=100&includes[]=cover_art');
                 const mangaListData = await mangaListRes.json();
                 const mangaList = mangaListData.data;
-                const randomManga = mangaList[Math.floor(Math.random() * mangaList.length)];
                 
+                if (!mangaList || mangaList.length === 0) {
+                    throw new Error("Manga bulunamadı.");
+                }
+                
+                const randomManga = mangaList[Math.floor(Math.random() * mangaList.length)];
                 const title = randomManga.attributes.title.en || Object.values(randomManga.attributes.title)[0] || "Bilinmeyen Başlık";
                 let description = randomManga.attributes.description.en || "Açıklama bulunamadı.";
                 description = description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
